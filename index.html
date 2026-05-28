@@ -1,0 +1,1762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My GitHub Website</title>
+</head>
+<body>
+    <h1>Welcome to my website!</h1>
+    <p>This page is hosted completely for free using GitHub Pages.</p>
+</body>
+</html>
+cat > /home/claude/build_site.py << 'PYEOF'
+import json
+
+with open('/home/claude/images_b64.json') as f:
+    b64 = json.load(f)
+
+LOGO = b64['logo']
+SS_TODAY = b64['ss_today']
+SS_NUTRITION = b64['ss_nutrition']
+SS_PROGRESS = b64['ss_progress']
+SS_MONTHLY = b64['ss_monthly']
+SS_EXERCISE = b64['ss_exercise']
+SS_EXERCISE2 = b64['ss_exercise2']
+SS_BODYWEIGHT = b64['ss_bodyweight']
+
+# Write HTML using placeholder replacement to avoid f-string JS conflicts
+HTML = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PowerTrack — Fitness Tracker App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ===== RESET & ROOT ===== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --red: #E8192C;
+  --red-dim: rgba(232,25,44,0.12);
+  --red-glow: rgba(232,25,44,0.45);
+  --red-glow-soft: rgba(232,25,44,0.2);
+  --bg: #070707;
+  --bg2: #0e0e0e;
+  --surface: rgba(255,255,255,0.04);
+  --surface-hover: rgba(255,255,255,0.07);
+  --glass: rgba(14,14,14,0.6);
+  --glass-light: rgba(255,255,255,0.05);
+  --border: rgba(255,255,255,0.08);
+  --border-red: rgba(232,25,44,0.35);
+  --text: #ffffff;
+  --muted: #7a7a7a;
+  --muted2: #555;
+}
+html { scroll-behavior: smooth; background: var(--bg); }
+body {
+  font-family: 'Barlow', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+a { text-decoration: none; color: inherit; }
+img { display: block; }
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--red); border-radius: 2px; }
+
+/* ===== GLASS MIXIN ===== */
+.glass {
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+}
+.glass-light {
+  background: var(--glass-light);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+}
+
+/* ===== NOISE TEXTURE OVERLAY ===== */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
+}
+
+/* ===== NAV ===== */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 5%;
+  height: 70px;
+  background: rgba(7,7,7,0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border);
+  transition: all 0.3s ease;
+}
+nav.scrolled {
+  border-bottom-color: var(--border-red);
+  box-shadow: 0 0 40px rgba(232,25,44,0.08);
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.nav-logo img {
+  height: 36px;
+  width: auto;
+  filter: drop-shadow(0 0 8px var(--red-glow-soft));
+}
+.logo-text {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 1.6rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.logo-text .r { color: var(--red); }
+.nav-links {
+  display: flex;
+  gap: 2.5rem;
+  list-style: none;
+}
+.nav-links a {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: color 0.2s;
+  position: relative;
+}
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -4px; left: 0; right: 0;
+  height: 1px;
+  background: var(--red);
+  transform: scaleX(0);
+  transition: transform 0.25s;
+}
+.nav-links a:hover { color: var(--text); }
+.nav-links a:hover::after { transform: scaleX(1); }
+.nav-cta {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: var(--red);
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.25s;
+  box-shadow: 0 0 0 rgba(232,25,44,0);
+}
+.nav-cta:hover {
+  background: #ff1f33;
+  box-shadow: 0 0 20px var(--red-glow), 0 0 40px var(--red-glow-soft);
+  transform: translateY(-1px);
+}
+
+/* ===== HERO ===== */
+.hero {
+  min-height: 100vh;
+  padding: 100px 5% 60px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+.hero-bg-glow {
+  position: absolute;
+  top: 20%; left: -5%;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(232,25,44,0.1) 0%, transparent 65%);
+  pointer-events: none;
+  z-index: 0;
+}
+.hero-content { position: relative; z-index: 1; }
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--red-dim);
+  border: 1px solid var(--border-red);
+  color: var(--red);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 0.4rem 1rem;
+  border-radius: 100px;
+  margin-bottom: 2rem;
+  animation: fadeUp 0.8s ease both;
+  box-shadow: 0 0 16px rgba(232,25,44,0.15);
+}
+.hero-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 8rem;
+  line-height: 0.9;
+  letter-spacing: 3px;
+  margin-bottom: 1.8rem;
+  animation: fadeUp 0.8s 0.1s ease both;
+}
+.hero-title .red {
+  color: var(--red);
+  display: block;
+  text-shadow: 0 0 40px rgba(232,25,44,0.5), 0 0 80px rgba(232,25,44,0.2);
+}
+.hero-sub {
+  font-size: 1.05rem;
+  font-weight: 400;
+  color: var(--muted);
+  max-width: 430px;
+  line-height: 1.8;
+  margin-bottom: 2.5rem;
+  animation: fadeUp 0.8s 0.2s ease both;
+}
+.hero-btns {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  animation: fadeUp 0.8s 0.3s ease both;
+  margin-bottom: 2rem;
+}
+.btn-primary {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: var(--red);
+  color: #fff;
+  border: none;
+  padding: 0.9rem 2.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.btn-primary:hover {
+  background: #ff1f33;
+  box-shadow: 0 0 30px var(--red-glow), 0 0 60px var(--red-glow-soft);
+  transform: translateY(-2px);
+}
+.btn-ghost {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 0.9rem 1.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.btn-ghost:hover {
+  border-color: var(--border-red);
+  color: var(--red);
+  box-shadow: 0 0 20px rgba(232,25,44,0.1);
+}
+.hero-rating {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: fadeUp 0.8s 0.4s ease both;
+}
+.stars { color: var(--red); font-size: 0.95rem; letter-spacing: 2px; }
+.hero-rating span { font-size: 0.82rem; color: var(--muted); }
+
+/* ===== HERO APP FRAME ===== */
+.hero-visual {
+  position: relative;
+  z-index: 1;
+  animation: fadeUp 0.8s 0.2s ease both;
+}
+.app-frame {
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.05),
+    0 40px 100px rgba(0,0,0,0.8),
+    0 0 80px rgba(232,25,44,0.06);
+  position: relative;
+}
+.app-frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 2;
+  border-radius: 18px;
+}
+.app-frame-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1.2rem;
+  background: rgba(0,0,0,0.6);
+  border-bottom: 1px solid var(--border);
+}
+.app-brand {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.app-brand .r { color: var(--red); }
+.streak-pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(232,25,44,0.15);
+  border: 1px solid var(--border-red);
+  border-radius: 8px;
+  padding: 0.3rem 0.7rem;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--red);
+  box-shadow: 0 0 12px rgba(232,25,44,0.2);
+}
+.app-tabs {
+  display: flex;
+  background: #0a0a0a;
+  border-bottom: 1px solid var(--border);
+  padding: 0.5rem;
+  gap: 0.3rem;
+  overflow: hidden;
+}
+.atab {
+  flex: 1;
+  text-align: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  padding: 0.4rem 0.3rem;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+.atab.on {
+  background: var(--red);
+  color: #fff;
+  box-shadow: 0 0 12px rgba(232,25,44,0.5);
+}
+.app-body { padding: 1rem; }
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+}
+.astat {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.6rem 0.4rem;
+  text-align: center;
+  border-bottom: 2px solid var(--red);
+}
+.astat-n {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.3rem;
+  color: var(--red);
+  line-height: 1;
+  text-shadow: 0 0 10px rgba(232,25,44,0.5);
+}
+.astat-l {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.5rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 2px;
+}
+.timer-box {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+  margin-bottom: 0.8rem;
+}
+.timer-lbl {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.55rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.2rem;
+}
+.timer-val {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  color: var(--red);
+  letter-spacing: 4px;
+  text-shadow: 0 0 20px rgba(232,25,44,0.6);
+  line-height: 1;
+}
+.tbtn-row { display: flex; gap: 0.4rem; margin-top: 0.5rem; }
+.tbtn {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.7rem;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+}
+.tbtn.ts { background: var(--red); color: #fff; box-shadow: 0 0 10px rgba(232,25,44,0.4); }
+.tbtn.tr { background: rgba(255,255,255,0.06); color: var(--muted); border: 1px solid var(--border); }
+.tbtn.tst { background: rgba(160,100,0,0.2); color: #c8960c; border: 1px solid rgba(160,100,0,0.3); }
+.muscle-row { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.mchip {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.55rem;
+  border-radius: 5px;
+  background: rgba(255,255,255,0.04);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+.mchip.on {
+  background: rgba(232,25,44,0.18);
+  color: var(--red);
+  border-color: rgba(232,25,44,0.4);
+  box-shadow: 0 0 8px rgba(232,25,44,0.3);
+}
+
+/* ===== STATS STRIP ===== */
+.stats-strip {
+  background: rgba(255,255,255,0.02);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 2.5rem 5%;
+  display: flex;
+  justify-content: center;
+  gap: 6rem;
+  position: relative;
+  z-index: 1;
+}
+.stats-strip::before {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 200px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--red), transparent);
+}
+.sstat { text-align: center; }
+.sstat-n {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 3.5rem;
+  color: var(--red);
+  line-height: 1;
+  text-shadow: 0 0 30px rgba(232,25,44,0.4);
+}
+.sstat-l {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* ===== SECTION COMMON ===== */
+.sec { padding: 7rem 5%; max-width: 1400px; margin: 0 auto; position: relative; z-index: 1; }
+.sec-tag {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sec-tag::before {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 2px;
+  background: var(--red);
+  box-shadow: 0 0 8px var(--red);
+}
+.sec-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 4.5rem;
+  line-height: 0.93;
+  letter-spacing: 2px;
+  margin-bottom: 1.2rem;
+}
+.sec-title .r { color: var(--red); }
+.sec-sub {
+  font-size: 1rem;
+  color: var(--muted);
+  max-width: 480px;
+  line-height: 1.8;
+}
+
+/* ===== FEATURES ===== */
+.feat-grid {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 1.2rem;
+  margin-top: 4rem;
+}
+.feat-card {
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  transition: all 0.35s ease;
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+}
+.feat-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 60%);
+  pointer-events: none;
+}
+.feat-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--red), transparent);
+  opacity: 0;
+  transition: opacity 0.35s;
+}
+.feat-card:hover {
+  border-color: var(--border-red);
+  background: rgba(232,25,44,0.05);
+  box-shadow: 0 0 40px rgba(232,25,44,0.1), 0 20px 60px rgba(0,0,0,0.4);
+  transform: translateY(-6px);
+}
+.feat-card:hover::after { opacity: 1; }
+.feat-icon {
+  width: 52px;
+  height: 52px;
+  background: var(--red-dim);
+  border: 1px solid var(--border-red);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  margin-bottom: 1.3rem;
+  transition: all 0.35s;
+}
+.feat-card:hover .feat-icon {
+  box-shadow: 0 0 20px rgba(232,25,44,0.35);
+  background: rgba(232,25,44,0.18);
+}
+.feat-card h3 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 0.7rem;
+  color: var(--text);
+}
+.feat-card p {
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+/* ===== SHOWCASE ===== */
+.showcase-bg {
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+.showcase-bg::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%; transform: translate(-50%,-50%);
+  width: 800px; height: 400px;
+  background: radial-gradient(ellipse, rgba(232,25,44,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.showcase-inner {
+  padding: 6rem 5%;
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+.ss-tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 2.5rem 0 1.5rem;
+}
+.ss-tab {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.55rem 1.3rem;
+  border-radius: 7px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.ss-tab:hover { border-color: var(--border-red); color: var(--red); }
+.ss-tab.on {
+  background: var(--red);
+  color: #fff;
+  border-color: var(--red);
+  box-shadow: 0 0 20px var(--red-glow), 0 0 40px var(--red-glow-soft);
+}
+.ss-frame {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: 0 0 80px rgba(0,0,0,0.7), 0 0 40px rgba(232,25,44,0.06);
+  transition: all 0.4s ease;
+  position: relative;
+}
+.ss-frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 40%);
+  pointer-events: none;
+  z-index: 1;
+}
+.ss-frame img {
+  width: 100%;
+  max-height: 500px;
+  object-fit: cover;
+  object-position: top;
+  transition: opacity 0.3s ease;
+}
+
+/* ===== NUTRITION SECTION ===== */
+.nutrition-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5rem;
+  align-items: center;
+}
+.macro-glass {
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 0 60px rgba(0,0,0,0.4);
+  position: relative;
+  overflow: hidden;
+}
+.macro-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 50%);
+  pointer-events: none;
+}
+.macro-head {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 1.5rem;
+}
+.macro-row { margin-bottom: 1.1rem; }
+.macro-top {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  margin-bottom: 0.4rem;
+}
+.macro-name { font-weight: 600; color: var(--text); }
+.macro-val { color: var(--muted); font-size: 0.78rem; }
+.macro-track {
+  height: 5px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.macro-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 1.6s cubic-bezier(0.4,0,0.2,1);
+  width: 0;
+}
+.targets-row {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 0.7rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+.tgt-box {
+  background: rgba(255,255,255,0.03);
+  border-radius: 10px;
+  padding: 0.8rem 0.6rem;
+  text-align: center;
+  border-bottom: 2px solid;
+}
+.tgt-n {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+.tgt-l {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 3px;
+}
+.check-list { list-style: none; display: flex; flex-direction: column; gap: 0.8rem; margin-top: 1.5rem; }
+.check-list li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+.check-list li::before {
+  content: '✓';
+  color: var(--red);
+  font-weight: 700;
+  margin-top: 1px;
+  flex-shrink: 0;
+  text-shadow: 0 0 8px rgba(232,25,44,0.5);
+}
+
+/* ===== PROGRESS SECTION ===== */
+.progress-bg {
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+.progress-bg::before {
+  content: '';
+  position: absolute;
+  top: 50%; right: 0; transform: translateY(-50%);
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(232,25,44,0.08) 0%, transparent 65%);
+  pointer-events: none;
+}
+.progress-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5rem;
+  align-items: center;
+}
+.prog-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+.prog-card {
+  background: var(--glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--red);
+  border-radius: 12px;
+  padding: 1.2rem;
+  transition: all 0.3s;
+}
+.prog-card:hover {
+  border-color: var(--border-red);
+  box-shadow: 0 0 20px rgba(232,25,44,0.12);
+}
+.prog-n {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.2rem;
+  color: var(--red);
+  line-height: 1;
+  text-shadow: 0 0 20px rgba(232,25,44,0.4);
+}
+.prog-l {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 3px;
+}
+.chart-box {
+  background: var(--glass);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.2rem;
+  grid-column: 1 / -1;
+}
+.chart-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 1rem;
+}
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 80px;
+}
+.bbar {
+  flex: 1;
+  background: rgba(232,25,44,0.18);
+  border-radius: 3px 3px 0 0;
+  border-top: 1px solid rgba(232,25,44,0.4);
+  transition: height 1s ease;
+  min-height: 4px;
+}
+.bbar.peak {
+  background: rgba(232,25,44,0.5);
+  box-shadow: 0 0 10px rgba(232,25,44,0.4);
+}
+.ss-img-frame {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: 0 0 60px rgba(0,0,0,0.6), 0 0 30px rgba(232,25,44,0.06);
+  position: relative;
+}
+.ss-img-frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 40%);
+  z-index: 1;
+  pointer-events: none;
+}
+.ss-img-frame img { width: 100%; display: block; }
+
+/* ===== STREAK SECTION ===== */
+.streak-section {
+  text-align: center;
+  padding: 6rem 5%;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+.streak-section::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%; transform: translate(-50%,-50%);
+  width: 700px; height: 400px;
+  background: radial-gradient(ellipse, rgba(232,25,44,0.08) 0%, transparent 65%);
+  pointer-events: none;
+}
+.streak-bg-text {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18rem;
+  color: rgba(232,25,44,0.04);
+  line-height: 1;
+  position: absolute;
+  top: 50%; left: 50%; transform: translate(-50%,-50%);
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+}
+.streak-content { position: relative; z-index: 1; }
+.streak-cards {
+  display: flex;
+  justify-content: center;
+  gap: 1.2rem;
+  margin-top: 3rem;
+  flex-wrap: wrap;
+}
+.str-card {
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.8rem 2.2rem;
+  min-width: 160px;
+  text-align: center;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+.str-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 60%);
+  pointer-events: none;
+}
+.str-card:hover {
+  border-color: var(--border-red);
+  box-shadow: 0 0 30px rgba(232,25,44,0.15), 0 0 60px rgba(232,25,44,0.06);
+  transform: translateY(-5px);
+}
+.str-icon { font-size: 2rem; margin-bottom: 0.6rem; }
+.str-n {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  color: var(--red);
+  line-height: 1;
+  text-shadow: 0 0 20px rgba(232,25,44,0.4);
+}
+.str-l {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* ===== TESTIMONIALS ===== */
+.test-bg {
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.test-grid {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 1.2rem;
+  margin-top: 3.5rem;
+}
+.test-card {
+  background: var(--glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.8rem;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+.test-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 50%);
+  pointer-events: none;
+}
+.test-card:hover {
+  border-color: var(--border-red);
+  box-shadow: 0 0 30px rgba(232,25,44,0.1);
+}
+.test-stars { color: var(--red); font-size: 0.9rem; letter-spacing: 2px; margin-bottom: 1rem; text-shadow: 0 0 10px rgba(232,25,44,0.4); }
+.test-quote { font-size: 0.88rem; color: var(--muted); line-height: 1.75; margin-bottom: 1.3rem; }
+.test-author { display: flex; align-items: center; gap: 10px; }
+.test-av {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: var(--red-dim);
+  border: 1px solid var(--border-red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--red);
+  box-shadow: 0 0 10px rgba(232,25,44,0.2);
+}
+.test-name { font-size: 0.88rem; font-weight: 600; }
+.test-role { font-size: 0.72rem; color: var(--muted); }
+
+/* ===== LAUNCH CTA ===== */
+.launch-bg {
+  padding: 5rem 5%;
+  position: relative;
+  z-index: 1;
+}
+.launch-card {
+  background: var(--glass);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 4rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4rem;
+  align-items: center;
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 80px rgba(0,0,0,0.5);
+}
+.launch-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%);
+  pointer-events: none;
+}
+.launch-card::after {
+  content: '';
+  position: absolute;
+  right: -100px; top: 50%; transform: translateY(-50%);
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(232,25,44,0.1) 0%, transparent 65%);
+  pointer-events: none;
+}
+.launch-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--red-dim);
+  border: 1px solid var(--border-red);
+  color: var(--red);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.9rem;
+  border-radius: 100px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 0 16px rgba(232,25,44,0.15);
+}
+.launch-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 3.8rem;
+  line-height: 0.95;
+  letter-spacing: 2px;
+  margin-bottom: 1rem;
+}
+.launch-title .r { color: var(--red); text-shadow: 0 0 30px rgba(232,25,44,0.4); }
+.launch-sub { color: var(--muted); font-size: 0.95rem; max-width: 420px; line-height: 1.7; margin-bottom: 2rem; }
+.email-row { display: flex; gap: 0.8rem; }
+.email-inp {
+  flex: 1;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.85rem 1.2rem;
+  border-radius: 8px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.9rem;
+  outline: none;
+  transition: all 0.25s;
+  backdrop-filter: blur(10px);
+}
+.email-inp:focus {
+  border-color: var(--border-red);
+  box-shadow: 0 0 0 3px rgba(232,25,44,0.1);
+  background: rgba(255,255,255,0.07);
+}
+.email-inp::placeholder { color: var(--muted2); }
+.succ-msg { display: none; color: var(--red); font-size: 0.88rem; margin-top: 0.8rem; font-weight: 500; text-shadow: 0 0 10px rgba(232,25,44,0.3); }
+.launch-note { font-size: 0.78rem; color: var(--muted); margin-top: 1rem; }
+.launch-note a { color: var(--red); transition: 0.2s; }
+.launch-note a:hover { text-shadow: 0 0 10px rgba(232,25,44,0.4); }
+.playstore-box {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 2rem 2.5rem;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+.ps-icon { font-size: 3rem; margin-bottom: 0.8rem; }
+.ps-soon {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.ps-store {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+.ps-pill {
+  display: inline-block;
+  background: var(--red);
+  color: #fff;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.8rem;
+  border-radius: 100px;
+  margin-top: 0.8rem;
+  box-shadow: 0 0 12px rgba(232,25,44,0.4);
+}
+
+/* ===== FOOTER ===== */
+.footer-wrap {
+  border-top: 1px solid var(--border);
+  background: rgba(255,255,255,0.01);
+  position: relative;
+  z-index: 1;
+}
+footer {
+  padding: 4rem 5% 2rem;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr;
+  gap: 3rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.foot-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 1rem; }
+.foot-logo img { height: 36px; filter: drop-shadow(0 0 6px rgba(232,25,44,0.3)); }
+.foot-logo-text {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 1.5rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.foot-logo-text .r { color: var(--red); }
+.foot-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.7; max-width: 280px; }
+footer h4 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 1.2rem;
+}
+footer ul { list-style: none; display: flex; flex-direction: column; gap: 0.65rem; }
+footer ul a { font-size: 0.88rem; color: var(--muted); transition: all 0.2s; }
+footer ul a:hover { color: var(--red); text-shadow: 0 0 8px rgba(232,25,44,0.3); }
+.foot-bottom {
+  border-top: 1px solid var(--border);
+  padding: 1.5rem 5%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.foot-bottom p { font-size: 0.78rem; color: var(--muted); }
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.reveal { opacity: 0; transform: translateY(32px); transition: opacity 0.75s ease, transform 0.75s ease; }
+.reveal.in { opacity: 1; transform: translateY(0); }
+.reveal-d1 { transition-delay: 0.1s; }
+.reveal-d2 { transition-delay: 0.2s; }
+.reveal-d3 { transition-delay: 0.3s; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+  .hero { grid-template-columns: 1fr; text-align: center; }
+  .hero-title { font-size: 5rem; }
+  .hero-btns { justify-content: center; }
+  .hero-rating { justify-content: center; }
+  .hero-sub { margin: 0 auto 2.5rem; }
+  .feat-grid { grid-template-columns: repeat(2,1fr); }
+  .nutrition-grid, .progress-grid { grid-template-columns: 1fr; }
+  .test-grid { grid-template-columns: 1fr; }
+  footer { grid-template-columns: 1fr; }
+  .launch-card { grid-template-columns: 1fr; }
+  .stats-strip { gap: 3rem; flex-wrap: wrap; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="nav-logo">
+    <img src="data:image/png;base64,__LOGO__" alt="PowerTrack Logo">
+    <div class="logo-text">POWER<span class="r">TRACK</span></div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#showcase">Screenshots</a></li>
+    <li><a href="#nutrition">Nutrition</a></li>
+    <li><a href="#progress">Progress</a></li>
+    <li><a href="#launch">Get Access</a></li>
+  </ul>
+  <button class="nav-cta" onclick="scrollTo('launch')">Get Early Access</button>
+</nav>
+
+<!-- HERO -->
+<section>
+  <div class="hero-bg-glow"></div>
+  <div class="hero">
+    <div class="hero-content">
+      <div class="hero-badge">🔥 Fitness Tracker App</div>
+      <h1 class="hero-title">TRACK.<br>TRAIN.<br><span class="red">DOMINATE.</span></h1>
+      <p class="hero-sub">PowerTrack is the all-in-one fitness companion built for serious athletes. Log every workout, hit your macros, and watch your body transform — one session at a time.</p>
+      <div class="hero-btns">
+        <button class="btn-primary" onclick="scrollTo('launch')">Get Early Access</button>
+        <button class="btn-ghost" onclick="scrollTo('showcase')">See It In Action ↓</button>
+      </div>
+      <div class="hero-rating">
+        <span class="stars">★★★★★</span>
+        <span>Rated 5 out of 5 by 100+ users</span>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="app-frame">
+        <div class="app-frame-header">
+          <div class="app-brand">POWER<span class="r">TRACK</span></div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;font-weight:700;letter-spacing:0.08em;color:var(--red)">THURSDAY — MAY 28, 2026</div>
+          <div class="streak-pill">🔥 1 DAY STREAK</div>
+        </div>
+        <div class="app-tabs">
+          <div class="atab on">Today</div>
+          <div class="atab">Progress</div>
+          <div class="atab">Monthly</div>
+          <div class="atab">Nutrition</div>
+          <div class="atab">Exercises</div>
+        </div>
+        <div class="app-body">
+          <div class="stat-row">
+            <div class="astat"><div class="astat-n" id="h1">0</div><div class="astat-l">Completed</div></div>
+            <div class="astat"><div class="astat-n" id="h2">0</div><div class="astat-l">Volume kg</div></div>
+            <div class="astat"><div class="astat-n">0:00</div><div class="astat-l">Duration</div></div>
+            <div class="astat"><div class="astat-n">0%</div><div class="astat-l">Intensity</div></div>
+          </div>
+          <div class="timer-box">
+            <div class="timer-lbl">Session Timer</div>
+            <div class="timer-val" id="tmr">00:00:00</div>
+            <div class="tbtn-row">
+              <button class="tbtn ts" id="startBtn">START</button>
+              <button class="tbtn tr" id="resetBtn">RESET</button>
+              <button class="tbtn tst">REST</button>
+            </div>
+          </div>
+          <div class="muscle-row">
+            <div class="mchip on">🔥 Warm-up 0/3</div>
+            <div class="mchip">💪 Chest 0/4</div>
+            <div class="mchip">🦾 Back 0/4</div>
+            <div class="mchip">🫷 Shoulders 0/3</div>
+            <div class="mchip">🦵 Legs 0/5</div>
+            <div class="mchip">⚡ Core 0/4</div>
+            <div class="mchip">❄️ Cool-down 0/2</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS STRIP -->
+<div class="stats-strip">
+  <div class="sstat"><div class="sstat-n">100+</div><div class="sstat-l">Active Users</div></div>
+  <div class="sstat"><div class="sstat-n">5★</div><div class="sstat-l">Average Rating</div></div>
+  <div class="sstat"><div class="sstat-n">5</div><div class="sstat-l">Core Modules</div></div>
+  <div class="sstat"><div class="sstat-n">∞</div><div class="sstat-l">Exercises Trackable</div></div>
+</div>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="sec reveal">
+    <div class="sec-tag">What's inside</div>
+    <div class="sec-title">BUILT FOR <span class="r">EVERY ATHLETE</span></div>
+    <p class="sec-sub">Every tool you need to build the body you want — all in one powerful, beautifully dark app. No clutter. No compromises.</p>
+    <div class="feat-grid">
+      <div class="feat-card reveal reveal-d1">
+        <div class="feat-icon">🏋️</div>
+        <h3>Workout Tracker</h3>
+        <p>Log every set, rep, and kilogram with a live session timer. Organised by muscle group — warm-up, chest, back, shoulders, legs, core, and cool-down.</p>
+      </div>
+      <div class="feat-card reveal reveal-d2">
+        <div class="feat-icon">📊</div>
+        <h3>Progress Analytics</h3>
+        <p>Deep charts across Overview, Strength, Body Weight, and Activity tabs. Track volume, PRs, and weekly frequency over 30 and 90 days.</p>
+      </div>
+      <div class="feat-card reveal reveal-d3">
+        <div class="feat-icon">🥗</div>
+        <h3>Nutrition Tracker</h3>
+        <p>Monitor calories, protein, carbs, fats, fiber, and water intake. Set custom daily targets and track your 7-day calorie trend.</p>
+      </div>
+      <div class="feat-card reveal reveal-d1">
+        <div class="feat-icon">📅</div>
+        <h3>Monthly Calendar</h3>
+        <p>Full calendar view showing workout days done, days missed, and nutrition logged. Spot your patterns and stay consistent every month.</p>
+      </div>
+      <div class="feat-card reveal reveal-d2">
+        <div class="feat-icon">🔥</div>
+        <h3>Streak System</h3>
+        <p>Dual streaks — one for workouts, one for nutrition. Daily accountability that keeps you coming back and never breaking the chain.</p>
+      </div>
+      <div class="feat-card reveal reveal-d3">
+        <div class="feat-icon">⚙️</div>
+        <h3>Exercise Manager</h3>
+        <p>Build fully custom workout plans. Add, reorder, and fine-tune every exercise with sets, reps, weight, and rest targets — your plan, your rules.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SCREENSHOT SHOWCASE -->
+<div class="showcase-bg" id="showcase">
+  <div class="showcase-inner reveal">
+    <div class="sec-tag">Real App Screenshots</div>
+    <div class="sec-title">SEE IT IN <span class="r">ACTION</span></div>
+    <div class="ss-tabs">
+      <button class="ss-tab on" data-key="today">Today's Workout</button>
+      <button class="ss-tab" data-key="nutrition">Nutrition</button>
+      <button class="ss-tab" data-key="progress">Progress</button>
+      <button class="ss-tab" data-key="monthly">Monthly</button>
+      <button class="ss-tab" data-key="exercise">Exercise Manager</button>
+      <button class="ss-tab" data-key="bodyweight">Body Weight</button>
+    </div>
+    <div class="ss-frame">
+      <img id="ssImg" src="data:image/png;base64,__SS_TODAY__" alt="PowerTrack App Screenshot">
+    </div>
+  </div>
+</div>
+
+<!-- NUTRITION -->
+<section id="nutrition">
+  <div class="sec reveal">
+    <div class="nutrition-grid">
+      <div>
+        <div class="sec-tag">Nutrition Tracking</div>
+        <div class="sec-title">FUEL YOUR<br><span class="r">PERFORMANCE</span></div>
+        <p class="sec-sub">Stop guessing what to eat. PowerTrack shows you exactly where you stand on every macro, every day — and tells you what's left to hit your goal.</p>
+        <ul class="check-list">
+          <li>Set custom daily targets — calories, protein, carbs, fats, fiber & water</li>
+          <li>Log meals by time — breakfast, lunch, dinner, or custom meals</li>
+          <li>7-day calorie trend chart to visualise your consistency</li>
+          <li>One-tap water intake tracking with +250ml & +500ml shortcuts</li>
+          <li>Nutrition streak — tracks days you hit your calorie goal within 20%</li>
+        </ul>
+      </div>
+      <div class="macro-glass">
+        <div class="macro-head">Today's Nutrition Overview</div>
+        <div class="macro-row">
+          <div class="macro-top"><span class="macro-name">Calories</span><span class="macro-val">1,847 / 2,000 kcal</span></div>
+          <div class="macro-track"><div class="macro-fill" id="m1" style="background:var(--red)"></div></div>
+        </div>
+        <div class="macro-row">
+          <div class="macro-top"><span class="macro-name">Protein</span><span class="macro-val">142 / 150 g</span></div>
+          <div class="macro-track"><div class="macro-fill" id="m2" style="background:#E8A000"></div></div>
+        </div>
+        <div class="macro-row">
+          <div class="macro-top"><span class="macro-name">Carbohydrates</span><span class="macro-val">198 / 220 g</span></div>
+          <div class="macro-track"><div class="macro-fill" id="m3" style="background:#4A9EE8"></div></div>
+        </div>
+        <div class="macro-row">
+          <div class="macro-top"><span class="macro-name">Fats</span><span class="macro-val">54 / 70 g</span></div>
+          <div class="macro-track"><div class="macro-fill" id="m4" style="background:#9B59B6"></div></div>
+        </div>
+        <div class="macro-row">
+          <div class="macro-top"><span class="macro-name">Fiber</span><span class="macro-val">22 / 30 g</span></div>
+          <div class="macro-track"><div class="macro-fill" id="m5" style="background:#2ECC71"></div></div>
+        </div>
+        <div class="macro-row">
+          <div class="macro-top"><span class="macro-name">Water</span><span class="macro-val">1,800 / 2,500 ml</span></div>
+          <div class="macro-track"><div class="macro-fill" id="m6" style="background:#1ABC9C"></div></div>
+        </div>
+        <div class="targets-row">
+          <div class="tgt-box" style="border-color:var(--red)"><div class="tgt-n" style="color:var(--red)">2000</div><div class="tgt-l">kcal</div></div>
+          <div class="tgt-box" style="border-color:#E8A000"><div class="tgt-n" style="color:#E8A000">150g</div><div class="tgt-l">Protein</div></div>
+          <div class="tgt-box" style="border-color:#1ABC9C"><div class="tgt-n" style="color:#1ABC9C">2500ml</div><div class="tgt-l">Water</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROGRESS -->
+<div class="progress-bg" id="progress">
+  <div class="sec reveal">
+    <div class="progress-grid">
+      <div>
+        <div class="sec-tag">Advanced Analytics</div>
+        <div class="sec-title">TRACK YOUR<br><span class="r">GROWTH</span></div>
+        <p class="sec-sub" style="margin-bottom:2rem">Four dedicated dashboards — Overview, Strength, Body Weight, and Activity — give you a complete picture of your progress over time.</p>
+        <div class="prog-cards">
+          <div class="prog-card"><div class="prog-n" id="pc1">0</div><div class="prog-l">Sessions (30D)</div></div>
+          <div class="prog-card"><div class="prog-n">24.2t</div><div class="prog-l">Total Volume</div></div>
+          <div class="prog-card"><div class="prog-n">4m</div><div class="prog-l">Avg Duration</div></div>
+          <div class="prog-card"><div class="prog-n">🔥 1</div><div class="prog-l">Day Streak</div></div>
+          <div class="chart-box">
+            <div class="chart-label">30-Day Volume Trend</div>
+            <div class="bar-chart" id="barChart"></div>
+          </div>
+        </div>
+      </div>
+      <div class="ss-img-frame">
+        <img src="data:image/png;base64,__SS_PROGRESS__" alt="Progress Analytics">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STREAK -->
+<section class="streak-section reveal">
+  <div class="streak-bg-text">STREAK</div>
+  <div class="streak-content">
+    <div class="sec-tag" style="justify-content:center">Consistency is everything</div>
+    <div class="sec-title" style="font-size:4.5rem">NEVER MISS<br><span class="r">A DAY AGAIN</span></div>
+    <p style="color:var(--muted);max-width:480px;margin:1rem auto 0;font-size:1rem;line-height:1.8">PowerTrack tracks both your workout AND nutrition streaks. See exactly which days you crushed it and which ones slipped — then own it.</p>
+    <div class="streak-cards">
+      <div class="str-card"><div class="str-icon">🏋️</div><div class="str-n">Daily</div><div class="str-l">Workout Streak</div></div>
+      <div class="str-card"><div class="str-icon">🥗</div><div class="str-n">Daily</div><div class="str-l">Nutrition Streak</div></div>
+      <div class="str-card"><div class="str-icon">📅</div><div class="str-n">Monthly</div><div class="str-l">Calendar View</div></div>
+      <div class="str-card"><div class="str-icon">📈</div><div class="str-n">90 Day</div><div class="str-l">Weight Trend</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<div class="test-bg">
+  <div class="sec reveal">
+    <div class="sec-tag">User Reviews</div>
+    <div class="sec-title">LOVED BY <span class="r">ATHLETES</span></div>
+    <div class="test-grid">
+      <div class="test-card">
+        <div class="test-stars">★★★★★</div>
+        <p class="test-quote">"PowerTrack is the most complete fitness tracker I've ever used. The nutrition streak feature alone keeps me accountable every single day. Nothing comes close."</p>
+        <div class="test-author"><div class="test-av">RK</div><div><div class="test-name">Rahul K.</div><div class="test-role">Powerlifter · 3 months</div></div></div>
+      </div>
+      <div class="test-card">
+        <div class="test-stars">★★★★★</div>
+        <p class="test-quote">"I love tracking everything — workouts, macros, body weight — in one app that actually looks incredible. The dark theme and red accents are just 🔥"</p>
+        <div class="test-author"><div class="test-av">SA</div><div><div class="test-name">Sara A.</div><div class="test-role">Fitness Enthusiast · 2 months</div></div></div>
+      </div>
+      <div class="test-card">
+        <div class="test-stars">★★★★★</div>
+        <p class="test-quote">"The monthly calendar showing workout vs missed days is a game changer. It makes me want to fill every single square. My clients love it too."</p>
+        <div class="test-author"><div class="test-av">MJ</div><div><div class="test-name">Marcus J.</div><div class="test-role">Gym Coach · 4 months</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LAUNCH CTA -->
+<div class="launch-bg" id="launch">
+  <div class="launch-card reveal">
+    <div style="position:relative;z-index:1">
+      <div class="launch-badge">🚀 Coming Soon — Google Play Store</div>
+      <div class="launch-title">GET EARLY<br><span class="r">ACCESS NOW</span></div>
+      <p class="launch-sub">PowerTrack is live via link today and launching on Google Play Store very soon. Drop your email and be first to know the moment it goes live.</p>
+      <div class="email-row">
+        <input class="email-inp" type="email" id="emailInp" placeholder="Enter your email address">
+        <button class="btn-primary" onclick="handleSignup()">Notify Me</button>
+      </div>
+      <div class="succ-msg" id="succMsg">🎉 You're on the list! We'll notify you at launch.</div>
+      <p class="launch-note">No spam. Unsubscribe anytime. Questions? <a href="mailto:powertrack211@gmail.com">powertrack211@gmail.com</a></p>
+    </div>
+    <div class="playstore-box">
+      <div class="ps-icon">▶️</div>
+      <div class="ps-soon">Coming soon on</div>
+      <div class="ps-store">Google Play</div>
+      <div class="ps-pill">Launching Soon</div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer-wrap">
+  <footer>
+    <div>
+      <div class="foot-logo">
+        <img src="data:image/png;base64,__LOGO__" alt="PowerTrack">
+        <div class="foot-logo-text">POWER<span class="r">TRACK</span></div>
+      </div>
+      <p class="foot-desc">The fitness tracker built for athletes who don't make excuses. Track every rep, every meal, every milestone.</p>
+    </div>
+    <div>
+      <h4>Quick Links</h4>
+      <ul>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#showcase">Screenshots</a></li>
+        <li><a href="#nutrition">Nutrition</a></li>
+        <li><a href="#progress">Progress</a></li>
+        <li><a href="#launch">Get Early Access</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Contact</h4>
+      <ul>
+        <li><a href="mailto:powertrack211@gmail.com">powertrack211@gmail.com</a></li>
+        <li><a href="https://www.powertrack.com" target="_blank">www.powertrack.com</a></li>
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms of Service</a></li>
+      </ul>
+    </div>
+  </footer>
+  <div class="foot-bottom" style="max-width:1400px;margin:0 auto;padding:1.5rem 5%;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border)">
+    <p>© 2026 PowerTrack. All rights reserved.</p>
+    <p>Built for athletes, by athletes. 💪</p>
+  </div>
+</div>
+
+<script>
+(function() {
+  // NAV SCROLL
+  var nav = document.getElementById('nav');
+  window.addEventListener('scroll', function() {
+    if (window.scrollY > 50) {
+      nav.classList.add('scrolled');
+    } else {
+      nav.classList.remove('scrolled');
+    }
+  });
+
+  // SCROLL TO
+  window.scrollTo = function(id) {
+    var el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // TIMER
+  var timerEl = document.getElementById('tmr');
+  var startBtn = document.getElementById('startBtn');
+  var resetBtn = document.getElementById('resetBtn');
+  var secs = 0;
+  var running = false;
+  var interval = null;
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function updateTimer() {
+    secs++;
+    var h = Math.floor(secs / 3600);
+    var m = Math.floor((secs % 3600) / 60);
+    var s = secs % 60;
+    timerEl.textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
+  }
+
+  startBtn.addEventListener('click', function() {
+    if (!running) {
+      running = true;
+      interval = setInterval(updateTimer, 1000);
+      startBtn.textContent = 'PAUSE';
+    } else {
+      running = false;
+      clearInterval(interval);
+      startBtn.textContent = 'START';
+    }
+  });
+
+  resetBtn.addEventListener('click', function() {
+    running = false;
+    clearInterval(interval);
+    secs = 0;
+    timerEl.textContent = '00:00:00';
+    startBtn.textContent = 'START';
+  });
+
+  // COUNTER ANIMATION
+  function animCount(id, target, duration) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var start = 0;
+    var step = target / (duration / 16);
+    var t = setInterval(function() {
+      start = Math.min(start + step, target);
+      el.textContent = Math.round(start);
+      if (start >= target) clearInterval(t);
+    }, 16);
+  }
+  setTimeout(function() {
+    animCount('h1', 12, 900);
+    animCount('h2', 23400, 1200);
+  }, 600);
+
+  // SCREENSHOT TABS
+  var ssData = {
+    today: 'data:image/png;base64,__SS_TODAY__',
+    nutrition: 'data:image/png;base64,__SS_NUTRITION__',
+    progress: 'data:image/png;base64,__SS_PROGRESS__',
+    monthly: 'data:image/png;base64,__SS_MONTHLY__',
+    exercise: 'data:image/png;base64,__SS_EXERCISE__',
+    bodyweight: 'data:image/png;base64,__SS_BODYWEIGHT__'
+  };
+  var ssImg = document.getElementById('ssImg');
+  var tabs = document.querySelectorAll('.ss-tab');
+  tabs.forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      tabs.forEach(function(t) { t.classList.remove('on'); });
+      tab.classList.add('on');
+      var key = tab.getAttribute('data-key');
+      ssImg.style.opacity = '0';
+      setTimeout(function() {
+        ssImg.src = ssData[key];
+        ssImg.style.opacity = '1';
+      }, 280);
+    });
+  });
+
+  // SIGNUP
+  window.handleSignup = function() {
+    var inp = document.getElementById('emailInp');
+    var msg = document.getElementById('succMsg');
+    var btn = inp.nextElementSibling;
+    if (inp.value && inp.value.indexOf('@') > -1) {
+      msg.style.display = 'block';
+      inp.value = '';
+      inp.disabled = true;
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+    } else {
+      inp.style.borderColor = 'var(--red)';
+      inp.style.boxShadow = '0 0 0 3px rgba(232,25,44,0.25)';
+      setTimeout(function() {
+        inp.style.borderColor = '';
+        inp.style.boxShadow = '';
+      }, 1600);
+    }
+  };
+  document.getElementById('emailInp').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') window.handleSignup();
+  });
+
+  // BUILD BAR CHART
+  var barChart = document.getElementById('barChart');
+  if (barChart) {
+    var vals = [5,5,5,8,5,5,5,12,5,5,15,5,5,5,18,5,5,5,5,5,22,5,5,5,5,5,5,18,5,95];
+    vals.forEach(function(v, i) {
+      var b = document.createElement('div');
+      b.className = 'bbar' + (v === 95 ? ' peak' : '');
+      b.style.height = '4px';
+      barChart.appendChild(b);
+    });
+    // animate later via observer
+  }
+
+  // REVEAL ON SCROLL
+  var revealEls = document.querySelectorAll('.reveal');
+  var macroTriggered = false;
+  var progressTriggered = false;
+
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in');
+
+        // Macro bars
+        if (!macroTriggered && entry.target.querySelector && entry.target.querySelector('#m1')) {
+          macroTriggered = true;
+          var targets = {m1:92,m2:95,m3:90,m4:77,m5:73,m6:72};
+          Object.keys(targets).forEach(function(id) {
+            setTimeout(function() {
+              var el = document.getElementById(id);
+              if (el) el.style.width = targets[id] + '%';
+            }, 400);
+          });
+        }
+
+        // Bar chart
+        if (!progressTriggered && entry.target.querySelector && entry.target.querySelector('#barChart')) {
+          progressTriggered = true;
+          var vals2 = [5,5,5,8,5,5,5,12,5,5,15,5,5,5,18,5,5,5,5,5,22,5,5,5,5,5,5,18,5,95];
+          var bars = document.querySelectorAll('.bbar');
+          bars.forEach(function(bar, i) {
+            setTimeout(function() {
+              bar.style.transition = 'height 0.8s ease ' + (i * 0.025) + 's';
+              bar.style.height = vals2[i] + '%';
+            }, 300);
+          });
+          animCount('pc1', 1, 600);
+        }
+      }
+    });
+  }, { threshold: 0.12 });
+
+  revealEls.forEach(function(el) { observer.observe(el); });
+})();
+</script>
+</body>
+</html>"""
+
+# Replace placeholders
+HTML = HTML.replace('__LOGO__', LOGO)
+HTML = HTML.replace('__SS_TODAY__', SS_TODAY)
+HTML = HTML.replace('__SS_NUTRITION__', SS_NUTRITION)
+HTML = HTML.replace('__SS_PROGRESS__', SS_PROGRESS)
+HTML = HTML.replace('__SS_MONTHLY__', SS_MONTHLY)
+HTML = HTML.replace('__SS_EXERCISE__', SS_EXERCISE)
+HTML = HTML.replace('__SS_EXERCISE2__', SS_EXERCISE2)
+HTML = HTML.replace('__SS_BODYWEIGHT__', SS_BODYWEIGHT)
+
+with open('/mnt/user-data/outputs/PowerTrack_Website.html', 'w') as f:
+    f.write(HTML)
+
+print("Done! Size:", len(HTML) // 1024, "KB")
+PYEOF
